@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 import dotenv
 import os
 from pydantic import BaseModel
+from scripts.github import copy_file_contents, create_pr
+from fi_agent.agent import invoke_agent
 
 dotenv.load_dotenv()
 
@@ -25,7 +27,36 @@ class RequestedFIRE(BaseModel):
 
 @app.post('/fix')
 async def fix(data:RequestedFix):
-    pass
+    try:
+
+        file_url = data.file_url
+        github_token = data.github_token
+        file_contents = copy_file_contents(file_url=file_url, github_token=github_token)
+
+        if not file_contents:
+            raise HTTPException(status_code=500, detail="Could not read the file contents. Ensure the token is valid and with the necessary access")
+
+        result = invoke_agent(file_contents=file_contents)
+
+        if not result:
+            raise HTTPException(status_code=500,detail="Agent failed to analyze the code")
+
+        has_solution,solution = result
+
+        if has_solution == False:
+            return {
+                "has_solution": has_solution,
+                "solution": "No improvements needed in your code."
+            }
+        else:
+            create_pr(modified_code=solution, github_token=github_token)
+            return {
+                "has_solution": has_solution,
+                "solution": solution
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=e)
+
 
 @app.post('/review')
 async def review(data:RequestedReview):
