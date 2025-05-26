@@ -1,0 +1,10 @@
+fastapi
+langchain
+langchain_core
+langchain_community
+ollama
+deepseek
+pydantic
+httpx
+uvicorn
+python-dotenv
