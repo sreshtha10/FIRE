@@ -14,6 +14,6 @@ This agent is resposible for fixing the code based on different params like:
 This agent is responsible for reviewing any PR given by the user just like Github Copilot.
 
 
-### FIRE - @/fix-and-review
+### FIRE - @/fire
 
 Automate the process of fixing and reviewing code on github with 🔥
