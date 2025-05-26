@@ -11,5 +11,5 @@ import uuid
 def copy_file_contents(file_url, github_token):
     pass
 
-def create_pr(pr_url, github_token):
+def create_pr(modified_code, github_token):
     pass
