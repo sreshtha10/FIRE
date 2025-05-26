@@ -11,7 +11,7 @@ re_base_url = os.getenv("RE_BASE_URL")
 app = FastAPI()
 
 class RequestedFix(BaseModel):
-    branch:str
+    file_url:str
     github_token:str
 
 class RequestedReview(BaseModel):
@@ -19,7 +19,7 @@ class RequestedReview(BaseModel):
     github_token:str    
 
 class RequestedFIRE(BaseModel):
-    branch:str
+    repo_url:str
     github_token:str
     scrutiny: int
 
