@@ -8,3 +8,7 @@ pydantic
 httpx
 uvicorn
 python-dotenv
+gitpython
+datetime
+uuid
+requests
