@@ -1,14 +1,7 @@
 from fastapi import FastAPI, HTTPException
-import dotenv
-import os
 from pydantic import BaseModel
 from scripts.github import copy_file_contents, create_pr
 from fi_agent.agent import invoke_agent
-
-dotenv.load_dotenv()
-
-fi_base_url = os.getenv("FI_BASE_URL")
-re_base_url = os.getenv("RE_BASE_URL")
 
 app = FastAPI()
 
