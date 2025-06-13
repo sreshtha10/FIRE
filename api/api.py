@@ -5,6 +5,11 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from scripts.github import copy_file_contents, create_pr
 from fi_agent.agent import invoke_agent
+import logging
+
+logging.basicConfig(filename="../logs/api.log", format='%(asctime)s %(message)s', filemode='w')
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
@@ -24,34 +29,57 @@ class RequestedFIRE(BaseModel):
 @app.post('/fix')
 async def fix(data:RequestedFix):
     try:
-
         file_url = data.file_url
         github_token = data.github_token
         file_contents = copy_file_contents(file_url=file_url, github_token=github_token)
 
         if not file_contents:
+            logging.info("##Pulling file from github failed")
             raise HTTPException(status_code=500, detail="Could not read the file contents. Ensure the token is valid and with the necessary access")
 
+        logging.info('#Pulled file from github')
         result = invoke_agent(file_contents=file_contents)
 
         if not result:
+            logging.info('###Agent failed to process the file contents')
             raise HTTPException(status_code=500,detail="Agent failed to analyze the code")
 
+        logging.info('#Agent generated the response')
         has_solution,solution = result
 
         if has_solution == False:
+            logging.info('#No code changes recommeded by agent')
             return {
                 "has_solution": has_solution,
                 "solution": "No improvements needed in your code."
             }
-        else:
-            create_pr(modified_code=solution, github_token=github_token)
-            return {
-                "has_solution": has_solution,
-                "solution": solution
-            }
+        
+        logging.info("#Author doesn't know how to code lol...agent has recommeded some changes")
+        pr_result = await create_pr(modified_code=solution, file_url=file_url, github_token=github_token)
+        if not pr_result:
+            logging.info('#PR creation failed.')
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create pull request. Please check the file URL and GitHub token permissions."
+            )
+        
+        logging.info('#Successfully created PR..GG')
+
+        return {
+            "has_solution": has_solution,
+            "solution": solution,
+            "pr_url": pr_result['html_url']
+        }
+
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as-is
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500,detail=e)
+        # Convert other exceptions to HTTPException with proper message
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 @app.post('/review')
