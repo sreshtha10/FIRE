@@ -13,3 +13,5 @@ gitpython
 datetime
 uuid
 requests
+aiohttp
+certifi
