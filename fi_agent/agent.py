@@ -5,6 +5,7 @@ import re
 
 def setup_agent():
     try:
+        # replace it with the model of your choice like ChatOpenAI if you have $$ lol
         llm = ChatOllama(model="deepseek-coder-v2:latest")
 
         prompt = PromptTemplate(
