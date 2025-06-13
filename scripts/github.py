@@ -135,3 +135,12 @@ async def create_new_branch(file_url, headers, session):
         'branch': branch,
         'file_path': file_path
     }
+
+
+
+
+def get_pr_details(github_token,pr_url):
+    pass
+
+def post_pr_review(github_token,pr_url):
+    pass

@@ -3,8 +3,9 @@ from pydantic import BaseModel
 import os 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from scripts.github import copy_file_contents, create_pr
+from scripts.github import copy_file_contents, create_pr, get_pr_details, post_pr_review
 from fi_agent.agent import invoke_agent
+from re_agent.reviewer import invoke_reviewer
 import logging
 
 logging.basicConfig(filename="../logs/api.log", format='%(asctime)s %(message)s', filemode='w')
@@ -84,7 +85,41 @@ async def fix(data:RequestedFix):
 
 @app.post('/review')
 async def review(data:RequestedReview):
-    pass
+    try:
+        pr_url = data.pr_url
+        github_token = data.github_token
+
+        pr_data = await get_pr_details(github_token=github_token, pr_url=pr_url)
+
+        if not pr_data:
+            raise HTTPException(
+                    status_code=500,
+                    detail="Failed to pull PR details. Ensure the token and its permissions are valid."
+                )
+
+        review_comments = invoke_reviewer(pr_data=pr_data)
+
+        response = await post_pr_review(review_comments)
+
+        if not response:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to post review comments. Ensure the token and its permissions are valid."
+            )
+        
+        return {
+            "review_comments":review_comments
+        }
+
+    except HTTPException as he:
+        raise he
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+    
 
 @app.post('/fire')
 async def fire(data:RequestedFIRE):
