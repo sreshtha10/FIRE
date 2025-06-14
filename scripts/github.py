@@ -6,6 +6,12 @@ import certifi
 import datetime
 import base64
 from urllib.parse import urlparse
+import logging
+
+logging.basicConfig(filename="../../logs/github.log", format='%(asctime)s %(message)s', filemode='w')
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 
 def copy_file_contents(file_url, github_token):
     if 'github.com' in file_url and 'raw.githubusercontent.com' not in file_url:
@@ -139,8 +145,34 @@ async def create_new_branch(file_url, headers, session):
 
 
 
-def get_pr_details(github_token,pr_url):
-    pass
+async def get_pr_details(github_token,pr_url):
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    connector = aiohttp.TCPConnector(ssl=ssl_context)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        try:
+            headers = {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': f'token {github_token}',
+                'X-Github-Api-Version': '2022-11-28'
+            }
+
+            parsed = urlparse(pr_url)
+            path_parts = parsed.path.strip('/').split('/')
+            owner = path_parts[0]
+            repo = path_parts[1]
+            pull_req_number = path_parts[3]
+
+            api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_req_number}"
+
+            async with session.get(api_url, headers=headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+                print(data)
+                return data
+            
+        except Exception as e:
+            logger.info(str(e))
+            return None
 
 def post_pr_review(github_token,pr_url):
     pass
