@@ -12,6 +12,14 @@ logging.basicConfig(filename="../../logs/github.log", format='%(asctime)s %(mess
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+class ReviewDataModel:
+
+    def __init__(self, diff_file , title, description, comments):
+        self.diff_file = diff_file
+        self.title = title
+        self.description = description
+        self.comments = comments
+
 
 def copy_file_contents(file_url, github_token):
     if 'github.com' in file_url and 'raw.githubusercontent.com' not in file_url:
@@ -167,8 +175,32 @@ async def get_pr_details(github_token,pr_url):
             async with session.get(api_url, headers=headers) as response:
                 response.raise_for_status()
                 data = await response.json()
-                print(data)
-                return data
+                diff_url = data['diff_url']
+                comments_url = data['comments_url']
+
+            simple_get_headers = {
+                'Authorization': f'token {github_token}',
+                'Accept': 'application/vnd.github.v3.diff'
+            }
+
+            async with session.get(diff_url, headers=simple_get_headers) as diff_response:
+                diff_response.raise_for_status()
+                diff_content = await diff_response.text()
+            
+            async with session.get(comments_url,headers=simple_get_headers) as comments_response:
+                comments_response.raise_for_status()
+                comments = await comments_response.text()
+            
+
+            reviewer_input = ReviewDataModel(
+                diff_file=diff_content,
+                title=data['title'],
+                description=data['body'],
+                comments=comments
+            )
+
+
+            return reviewer_input
             
         except Exception as e:
             logger.info(str(e))
