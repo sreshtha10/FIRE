@@ -89,15 +89,15 @@ async def review(data:RequestedReview):
         pr_url = data.pr_url
         github_token = data.github_token
 
-        pr_data = await get_pr_details(github_token=github_token, pr_url=pr_url)
+        reviewer_input = await get_pr_details(github_token=github_token, pr_url=pr_url)
 
-        if not pr_data:
+        if not reviewer_input:
             raise HTTPException(
                     status_code=500,
                     detail="Failed to pull PR details. Ensure the token and its permissions are valid."
                 )
 
-        review_comments = invoke_reviewer(pr_data=pr_data)
+        review_comments = invoke_reviewer(reviewer_input=reviewer_input)
 
         response = await post_pr_review(review_comments)
 
