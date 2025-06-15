@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import os 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from scripts.github import copy_file_contents, create_pr, get_pr_details, post_pr_review, approve_pr
+from scripts.github import copy_file_contents, create_pr, get_pr_details, post_pr_review
 from fi_agent.agent import invoke_agent
 from re_agent.reviewer import invoke_reviewer
 import logging
@@ -100,13 +100,7 @@ async def review(data:RequestedReview):
 
         has_comments, review_comments, approve = invoke_reviewer(reviewer_input=reviewer_input)
         
-        if approve == True:
-            await approve_pr(github_token=github_token, pr_url=pr_url)
-        
-
-        if has_comments == True and len(review_comments)>0:
-            await post_pr_review(github_token=github_token, pr_url=pr_url)
-
+        await post_pr_review(github_token=github_token, pr_url=pr_url, comments=review_comments, isApproved=approve)
 
         return {
             "has_comments":has_comments,

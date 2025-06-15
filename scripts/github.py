@@ -196,8 +196,38 @@ async def get_pr_details(github_token,pr_url):
         except Exception as e:
             return None
 
-def post_pr_review(github_token,pr_url):
-    pass
+async def post_pr_review(github_token,pr_url, comments, isApproved):
 
-def approve_pr(github_token, pr_url):
-    pass
+    # get the required details from the pr url
+    parsed = urlparse(pr_url)
+    path_parts = parsed.path.strip('/').split('/')
+    owner = path_parts[0]
+    repo = path_parts[1]
+    pull_req_number = path_parts[3]
+
+
+    if isApproved:
+        title = "### ✅ Pull Request Approved\n\nEverything looks good overall."
+    else:
+        title = "### 📝 Review Suggestions\n\nSome improvements are recommended before approval:"
+
+    # Combine title + comments
+    body = f"{title}\n\n" + "\n\n".join(f"- {c}" for c in comments)
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_req_number}/reviews"
+
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github+json"
+    }
+
+    payload = {
+        "body": body,
+        "event": "COMMENT"
+    }
+
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    connector = aiohttp.TCPConnector(ssl=ssl_context)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        async with session.post(url, headers=headers, json=payload) as resp:
+            print(await resp.text())
