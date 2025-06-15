@@ -33,8 +33,7 @@ def setup_reviewer():
                 2. Code Quality - Is it clean, readable, and maintainable?
                 3. Potential Bugs - Any edge cases, regressions, or flaws?
 
-                ### Output Format:
-                Respond with a strict JSON object. Do not include markdown, explanations, or additional text outside the JSON structure.
+                Output Format (strict JSON object, not a string or markdown block):
                 
                 {{
                 "has_comments": true or false,
@@ -57,6 +56,20 @@ def setup_reviewer():
         return None
     
 
+def processed_reviewer_response(response:str):
+    # Remove Markdown code block fencing
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.strip(), flags=re.IGNORECASE | re.MULTILINE)
+
+    # Parse the JSON string
+    data = json.loads(cleaned)
+
+    has_comments= data.get('has_comments',False)
+    review_comments= data.get('review_comments',[])
+    approve=data.get('approve',False)
+
+    return has_comments, review_comments, approve
+
+
 
 def invoke_reviewer(reviewer_input:ReviewDataModel):
     try:
@@ -70,7 +83,7 @@ def invoke_reviewer(reviewer_input:ReviewDataModel):
                 comments=reviewer_input.comments
             )
             
-            return response
+            return processed_reviewer_response(response=response)
         
     except Exception as e:
         return None
