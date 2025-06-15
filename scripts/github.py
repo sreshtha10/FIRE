@@ -6,15 +6,10 @@ import certifi
 import datetime
 import base64
 from urllib.parse import urlparse
-import logging
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from re_agent.reviewer import ReviewDataModel
-
-logging.basicConfig(filename="../../logs/github.log", format='%(asctime)s %(message)s', filemode='w')
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def copy_file_contents(file_url, github_token):
@@ -199,7 +194,6 @@ async def get_pr_details(github_token,pr_url):
             return reviewer_input
             
         except Exception as e:
-            logger.info(str(e))
             return None
 
 def post_pr_review(github_token,pr_url):

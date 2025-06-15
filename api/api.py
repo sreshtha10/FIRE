@@ -97,19 +97,17 @@ async def review(data:RequestedReview):
                     detail="Failed to pull PR details. Ensure the token and its permissions are valid."
                 )
 
-        review_comments = invoke_reviewer(reviewer_input=reviewer_input)
+        reviewer_response = invoke_reviewer(reviewer_input=reviewer_input)
+        print(reviewer_response)
+        #response = await post_pr_review(reviewer_response)
 
-        response = await post_pr_review(review_comments)
-
-        if not response:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to post review comments. Ensure the token and its permissions are valid."
-            )
+        # if not response:
+        #     raise HTTPException(
+        #         status_code=500,
+        #         detail="Failed to post review comments. Ensure the token and its permissions are valid."
+        #     )
         
-        return {
-            "review_comments":review_comments
-        }
+        return reviewer_response
 
     except HTTPException as he:
         raise he
