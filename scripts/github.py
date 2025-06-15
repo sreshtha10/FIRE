@@ -7,18 +7,14 @@ import datetime
 import base64
 from urllib.parse import urlparse
 import logging
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from re_agent.reviewer import ReviewDataModel
 
 logging.basicConfig(filename="../../logs/github.log", format='%(asctime)s %(message)s', filemode='w')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-class ReviewDataModel:
-
-    def __init__(self, diff_file , title, description, comments):
-        self.diff_file = diff_file
-        self.title = title
-        self.description = description
-        self.comments = comments
 
 
 def copy_file_contents(file_url, github_token):
