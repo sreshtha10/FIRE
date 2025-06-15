@@ -198,3 +198,6 @@ async def get_pr_details(github_token,pr_url):
 
 def post_pr_review(github_token,pr_url):
     pass
+
+def approve_pr(github_token, pr_url):
+    pass

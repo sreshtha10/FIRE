@@ -3,10 +3,11 @@ from pydantic import BaseModel
 import os 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from scripts.github import copy_file_contents, create_pr, get_pr_details, post_pr_review
+from scripts.github import copy_file_contents, create_pr, get_pr_details, post_pr_review, approve_pr
 from fi_agent.agent import invoke_agent
 from re_agent.reviewer import invoke_reviewer
 import logging
+import json
 
 logging.basicConfig(filename="../logs/api.log", format='%(asctime)s %(message)s', filemode='w')
 logger = logging.getLogger()
@@ -97,17 +98,21 @@ async def review(data:RequestedReview):
                     detail="Failed to pull PR details. Ensure the token and its permissions are valid."
                 )
 
-        reviewer_response = invoke_reviewer(reviewer_input=reviewer_input)
-        print(reviewer_response)
-        #response = await post_pr_review(reviewer_response)
-
-        # if not response:
-        #     raise HTTPException(
-        #         status_code=500,
-        #         detail="Failed to post review comments. Ensure the token and its permissions are valid."
-        #     )
+        has_comments, review_comments, approve = invoke_reviewer(reviewer_input=reviewer_input)
         
-        return reviewer_response
+        if approve == True:
+            await approve_pr(github_token=github_token, pr_url=pr_url)
+        
+
+        if has_comments == True and len(review_comments)>0:
+            await post_pr_review(github_token=github_token, pr_url=pr_url)
+
+
+        return {
+            "has_comments":has_comments,
+            "review_comments":review_comments,
+            "approve":approve
+        }
 
     except HTTPException as he:
         raise he
