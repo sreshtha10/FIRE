@@ -7,7 +7,7 @@ from scripts.github import copy_file_contents, create_pr, get_pr_details, post_p
 from fi_agent.agent import invoke_agent
 from re_agent.reviewer import invoke_reviewer
 import logging
-import json
+
 
 logging.basicConfig(filename="../logs/api.log", format='%(asctime)s %(message)s', filemode='w')
 logger = logging.getLogger()
@@ -23,10 +23,6 @@ class RequestedReview(BaseModel):
     pr_url:str
     github_token:str    
 
-class RequestedFIRE(BaseModel):
-    repo_url:str
-    github_token:str
-    scrutiny: int
 
 @app.post('/fix')
 async def fix(data:RequestedFix):
@@ -119,8 +115,26 @@ async def review(data:RequestedReview):
     
 
 @app.post('/fire')
-async def fire(data:RequestedFIRE):
-    pass
+async def fire(data: RequestedFix):
+    try:
+        fix_response = await fix(data)
+
+        pr_url = fix_response.get('pr_url')
+        if not pr_url:
+            raise HTTPException(status_code=500, detail="PR creation failed, cannot proceed with review.")
+
+        review_request = RequestedReview(pr_url=pr_url, github_token=data.github_token)
+        review_response = await review(review_request)
+
+        return {
+            "fix": fix_response,
+            "review": review_response
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__=="__main__":
     import uvicorn

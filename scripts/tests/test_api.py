@@ -33,6 +33,19 @@ def test_review_endpoint():
     print(f"Status Code: {response.status_code}")
     print(f"Response: {response.json()}")
 
+
+def test_fire():
+    payload = {
+        "file_url":file_url,
+        "github_token":github_token
+    }
+
+    response = requests.post(f"{api_base_url}/fire", json=payload)
+
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {response.json()}")
+
+
 if __name__=="__main__":
     #test_fix_endpoint()
-    test_review_endpoint()
+    test_fire()
